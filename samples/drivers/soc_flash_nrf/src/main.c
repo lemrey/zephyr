@@ -5,40 +5,51 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr.h>
-#include <flash.h>
 #include <device.h>
+#include <flash.h>
 #include <stdio.h>
+#include <zephyr.h>
 
 /* Offset between pages */
+#if defined(CONFIG_FLASH_SIMULATOR)
+#define FLASH_TEST_OFFSET CONFIG_FLASH_SIMULATOR_BASE_ADDR
+#define FLASH_TEST_OFFSET2 CONFIG_FLASH_SIMULATOR_BASE_ADDR + 0x1234
+#define FLASH_TEST_PAGE_IDX 2
+#define FLASH_PAGE_SIZE CONFIG_FLASH_SIMULATOR_ERASE_UNIT
+#else
 #define FLASH_TEST_OFFSET 0x40000
-#define FLASH_PAGE_SIZE   4096
-#define TEST_DATA_WORD_0  0x1122
-#define TEST_DATA_WORD_1  0xaabb
-#define TEST_DATA_WORD_2  0xabcd
-#define TEST_DATA_WORD_3  0x1234
-
 #define FLASH_TEST_OFFSET2 0x41234
 #define FLASH_TEST_PAGE_IDX 37
+#define FLASH_PAGE_SIZE 4096
+#endif // CONFIG_FLASH_SIMULATOR
+
+#define TEST_DATA_WORD_0 0x1122
+#define TEST_DATA_WORD_1 0xaabb
+#define TEST_DATA_WORD_2 0xabcd
+#define TEST_DATA_WORD_3 0x1234
 
 void main(void)
 {
 	struct device *flash_dev;
-	u32_t buf_array_1[4] = { TEST_DATA_WORD_0, TEST_DATA_WORD_1,
-				    TEST_DATA_WORD_2, TEST_DATA_WORD_3 };
-	u32_t buf_array_2[4] = { TEST_DATA_WORD_3, TEST_DATA_WORD_1,
-				    TEST_DATA_WORD_2, TEST_DATA_WORD_0 };
-	u32_t buf_array_3[8] = { TEST_DATA_WORD_0, TEST_DATA_WORD_1,
-				    TEST_DATA_WORD_2, TEST_DATA_WORD_3,
-				    TEST_DATA_WORD_0, TEST_DATA_WORD_1,
-				    TEST_DATA_WORD_2, TEST_DATA_WORD_3 };
+	u32_t buf_array_1[4] = {TEST_DATA_WORD_0, TEST_DATA_WORD_1,
+				TEST_DATA_WORD_2, TEST_DATA_WORD_3};
+	u32_t buf_array_2[4] = {TEST_DATA_WORD_3, TEST_DATA_WORD_1,
+				TEST_DATA_WORD_2, TEST_DATA_WORD_0};
+	u32_t buf_array_3[8] = {TEST_DATA_WORD_0, TEST_DATA_WORD_1,
+				TEST_DATA_WORD_2, TEST_DATA_WORD_3,
+				TEST_DATA_WORD_0, TEST_DATA_WORD_1,
+				TEST_DATA_WORD_2, TEST_DATA_WORD_3};
 	u32_t buf_word = 0;
 	u32_t i, offset;
 
 	printf("\nNordic nRF5 Flash Testing\n");
 	printf("=========================\n");
 
-	flash_dev = device_get_binding("FLASH_EMULATOR");
+#if defined(CONFIG_FLASH_SIMULATOR)
+	flash_dev = device_get_binding(SIM_FLASH_DEV_NAME);
+#else
+	flash_dev = device_get_binding(FLASH_DEV_NAME);
+#endif
 
 	if (!flash_dev) {
 		printf("Nordic nRF5 flash driver was not found!\n");
@@ -58,17 +69,15 @@ void main(void)
 		buf_word = 0;
 		offset = FLASH_TEST_OFFSET + (i << 2);
 		printf("   Attempted to write %x at 0x%x\n", buf_array_1[i],
-				offset);
+		       offset);
 		if (flash_write(flash_dev, offset, &buf_array_1[i],
-					sizeof(u32_t)) != 0) {
+				sizeof(u32_t)) != 0) {
 			printf("   Flash write failed!\n");
-			//return;
 		}
 		printf("   Attempted to read 0x%x\n", offset);
 		if (flash_read(flash_dev, offset, &buf_word,
-					sizeof(u32_t)) != 0) {
+			       sizeof(u32_t)) != 0) {
 			printf("   Flash read failed!\n");
-			//return;
 		}
 		printf("   Data read: %x\n", buf_word);
 		if (buf_array_1[i] == buf_word) {
@@ -93,17 +102,15 @@ void main(void)
 		buf_word = 0;
 		offset = FLASH_TEST_OFFSET + (i << 2);
 		printf("   Attempted to write %x at 0x%x\n", buf_array_2[i],
-				offset);
+		       offset);
 		if (flash_write(flash_dev, offset, &buf_array_2[i],
-					sizeof(u32_t)) != 0) {
+				sizeof(u32_t)) != 0) {
 			printf("   Flash write failed!\n");
-			//return;
 		}
 		printf("   Attempted to read 0x%x\n", offset);
 		if (flash_read(flash_dev, offset, &buf_word,
-					sizeof(u32_t)) != 0) {
+			       sizeof(u32_t)) != 0) {
 			printf("   Flash read failed!\n");
-			//return;
 		}
 		printf("   Data read: %x\n", buf_word);
 		if (buf_array_2[i] == buf_word) {
@@ -127,17 +134,15 @@ void main(void)
 		buf_word = 0;
 		offset = FLASH_TEST_OFFSET + (i << 2) + 1;
 		printf("   Attempted to write %x at 0x%x\n", buf_array_3[i],
-				offset);
+		       offset);
 		if (flash_write(flash_dev, offset, &buf_array_3[i],
-					sizeof(u32_t)) != 0) {
+				sizeof(u32_t)) != 0) {
 			printf("   Flash write failed!\n");
-			//return;
 		}
 		printf("   Attempted to read 0x%x\n", offset);
 		if (flash_read(flash_dev, offset, &buf_word,
-					sizeof(u32_t)) != 0) {
+				sizeof(u32_t)) != 0) {
 			printf("   Flash read failed!\n");
-			//return;
 		}
 		printf("   Data read: %x\n", buf_word);
 		if (buf_array_3[i] == buf_word) {
@@ -170,8 +175,7 @@ void main(void)
 
 	if (!rc) {
 		printf("   Page of number %u has start offset 0x%08x\n",
-		       FLASH_TEST_PAGE_IDX,
-		       info.start_offset);
+		       FLASH_TEST_PAGE_IDX, info.start_offset);
 		printf("     and size of 0x%08x B.\n", info.size);
 		if (info.index == FLASH_TEST_PAGE_IDX) {
 			printf("     Page index resolved properly\n");

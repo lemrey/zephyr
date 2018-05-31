@@ -40,6 +40,3 @@
 	current-speed = <115200>;
 };
 
-&flash0 {
-	label = "FLASH_EMULATOR";
-};
