@@ -31,7 +31,13 @@
 #define PWM_DEV2	BLUE_PWM_LED_PWM_CONTROLLER
 #define PWM_CH2		BLUE_PWM_LED_PWM_CHANNEL
 #else
-#error "Choose supported board or add new board for the application"
+//#error "Choose supported board or add new board for the application"
+#define PWM_DEV0	PWM_0_LABEL
+#define PWM_CH0		PWM_0_CH0_PIN
+#define PWM_DEV1	PWM_0_LABEL
+#define PWM_CH1		PWM_0_CH1_PIN
+#define PWM_DEV2	PWM_0_LABEL
+#define PWM_CH2		PWM_0_CH2_PIN
 #endif
 
 /*
