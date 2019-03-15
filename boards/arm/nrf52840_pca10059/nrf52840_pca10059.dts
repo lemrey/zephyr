@@ -124,6 +124,7 @@
  * fstab-debugger	-to use an external debugger, w/o the nRF5 bootloader
  */
 #include "fstab-stock.dts"
+//#include "fstab-debugger.dts"
 
 &usbd {
 	compatible = "nordic,nrf-usbd";

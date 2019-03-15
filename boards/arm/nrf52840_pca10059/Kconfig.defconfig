@@ -11,10 +11,10 @@ config BOARD
 
 if BOARD_HAS_NRF5_BOOTLOADER && !BOOTLOADER_MCUBOOT
 
-# Link the application after Nordic MBR.
+# Override FLASH_LOAD_OFFEST to link the application after Nordic MBR.
 # When flashing MCUBoot, leave unchanged to link it in its correct partition.
 
-config TEXT_SECTION_OFFSET
+config FLASH_LOAD_OFFSET
 	default 0x1000
 
 endif # BOARD_HAS_NRF5_BOOTLOADER && !BOOTLOADER_MCUBOOT
