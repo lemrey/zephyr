@@ -27,26 +27,29 @@
 
 #define FLASH_SIZE (FLASH_SIMULATOR_FLASH_SIZE * FLASH_SIMULATOR_ERASE_UNIT)
 
+/* maximum number of pages that can be tracked by the stats module */
+#define STATS_PAGE_COUNT_THRESHOLD 64
+
 #define STATS_SECT_EC(N, _) STATS_SECT_ENTRY32(erase_cycles_unit##N)
 #define STATS_NAME_EC(N, _) STATS_NAME(flash_sim_stats, erase_cycles_unit##N)
 
 #define STATS_SECT_DIRTYR(N, _) STATS_SECT_ENTRY32(dirty_read_unit##N)
 #define STATS_NAME_DIRTYR(N, _) STATS_NAME(flash_sim_stats, dirty_read_unit##N)
 
-/* retrieve a unit erase cycles counter */
-#define ERASE_CYCLES_GET(U) (*(&flash_sim_stats.erase_cycles_unit0 + (U)))
 /* increment a unit erase cycles counter */
-#define ERASE_CYCLES_INC(U) (*(&flash_sim_stats.erase_cycles_unit0 + (U)) += 1)
-/* increment a unit "dirty" read counter */
-#define DIRTY_READ_INC(U) (*(&flash_sim_stats.dirty_read_unit0 + (U)) += 1)
+#define ERASE_CYCLES_INC(U)						     \
+	do {								     \
+		if (U < STATS_PAGE_COUNT_THRESHOLD) {			     \
+			(*(&flash_sim_stats.erase_cycles_unit0 + (U)) += 1); \
+		}							     \
+	} while (0)
 
-#if (defined(CONFIG_STATS) && (FLASH_SIMULATOR_FLASH_SIZE > 256))
-/* Check here as it is imposible to make such a limitation in Kconfig */
-#error You shall not declare more than 256 pages while using statistic
-	/* Limitation above is caused by used UTIL_REPEAT                  */
-	/* Using FLASH_SIMULATOR_FLASH_PAGE_COUNT allows to avoid terrible */
-	/* error logg at the output while this error occurs                */
-	#define FLASH_SIMULATOR_FLASH_PAGE_COUNT 2
+#if (defined(CONFIG_STATS) && \
+     (FLASH_SIMULATOR_FLASH_SIZE > STATS_PAGE_COUNT_THRESHOLD))
+       /* Limitation above is caused by used UTIL_REPEAT                  */
+       /* Using FLASH_SIMULATOR_FLASH_PAGE_COUNT allows to avoid terrible */
+       /* error logg at the output while this error occurs                */
+       #define FLASH_SIMULATOR_FLASH_PAGE_COUNT STATS_PAGE_COUNT_THRESHOLD
 #else
 #define FLASH_SIMULATOR_FLASH_PAGE_COUNT FLASH_SIMULATOR_FLASH_SIZE
 #endif
